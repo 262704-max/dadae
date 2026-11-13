@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>다대중 급식 칼로리 서바이벌</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Malgun Gothic',sans-serif;user-select:none}
+body{background:#0f172a;color:#f8fafc;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:16px}
+.wrap{width:100%;max-width:850px;text-align:center}
+.badge{display:inline-block;background:#1e3a8a;color:#93c5fd;padding:6px 14px;border-radius:20px;font-size:13px;font-weight:bold;margin-bottom:10px}
+h1{font-size:32px;margin-bottom:8px}
+.sub{color:#94a3b8;font-size:15px;margin-bottom:28px}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.d-card{background:#1e293b;border:2px solid #334155;border-radius:18px;padding:24px 16px;cursor:pointer;transition:.2s}
+.d-card:hover{transform:translateY(-5px);border-color:#38bdf8}
+.d-icon{font-size:36px;margin-bottom:10px}
+.d-title{font-size:20px;font-weight:bold;margin-bottom:8px}
+.d-desc{font-size:13px;color:#94a3b8;line-height:1.4;margin-bottom:14px}
+.d-best{font-size:12px;background:#0f172a;padding:4px 10px;border-radius:8px;display:inline-block}
+.hidden{display:none!important}
+.hud{display:flex;justify-content:space-around;background:#1e293b;padding:12px;border-radius:14px;margin-bottom:20px}
+.hud b{display:block;font-size:20px;color:#38bdf8;margin-top:2px}
+.q-box{font-size:19px;font-weight:bold;margin-bottom:18px}
+.q-box span{color:#facc15;text-decoration:underline}
+.arena{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch}
+.f-card{background:#1e293b;border:3px solid #334155;border-radius:20px;padding:26px 16px;cursor:pointer;display:flex;flex-direction:column;align-items:center;transition:.2s}
+.f-card:hover:not(.lock){border-color:#3b82f6;background:#263349}
+.f-card.win{border-color:#10b981;background:#064e3b}
+.f-card.lose{border-color:#ef4444;background:#7f1d1d}
+.f-emo{font-size:54px;margin-bottom:12px}
+.f-cat{font-size:12px;background:#0f172a;color:#94a3b8;padding:3px 10px;border-radius:6px;margin-bottom:8px}
+.f-name{font-size:22px;font-weight:bold;margin-bottom:6px}
+.f-desc{font-size:13px;color:#cbd5e1;margin-bottom:16px}
+.cal-box{width:100%;background:#0f172a;padding:12px;border-radius:12px;margin-top:auto}
+.cal-100{font-size:22px;font-weight:bold;color:#facc15}
+.cal-50{font-size:13px;color:#94a3b8;margin-top:2px}
+.vs{background:#ef4444;width:46px;height:46px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:bold;align-self:center;margin:auto}
+.fb{margin-top:20px;background:#1e293b;padding:18px;border-radius:16px;border:1px solid #475569}
+.fb-t{font-size:19px;font-weight:bold;margin-bottom:6px}
+.fb-d{font-size:14px;color:#e2e8f0;line-height:1.5;margin-bottom:14px}
+.btn{background:#3b82f6;color:#fff;border:none;padding:12px 26px;font-size:15px;font-weight:bold;border-radius:10px;cursor:pointer}
+.btn-r{background:#ef4444}
+.btn-h{background:#475569;margin-left:6px}
+.over{background:#1e293b;padding:36px 20px;border-radius:22px;max-width:480px;margin:auto;border:2px solid #ef4444}
+@media(max-width:700px){.grid,.arena{grid-template-columns:1fr}.vs{margin:-6px auto}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="badge">🏫 부산 다대중학교 급식 칼로리 대결</div>
+<h1>급식 칼로리 더 많이 더 적게</h1>
+<p class="sub">똑같이 100g을 먹었을 때 칼로리가 더 높은 급식을 고르세요! 틀리면 즉시 탈락!</p>
+<div id="s-start">
+<div class="grid">
+<div class="d-card" onclick="play('easy')"><div class="d-icon">🟢</div><div class="d-title" style="color:#10b981">쉬움 모드</div><div class="d-desc">칼로리 차이 100kcal 이상 직관 대결</div><div class="d-best" id="b-easy">최고: 0점</div></div>
+<div class="d-card" onclick="play('normal')"><div class="d-icon">🟡</div><div class="d-title" style="color:#f59e0b">보통 모드</div><div class="d-desc">40~100kcal 차이의 메인 반찬 승부</div><div class="d-best" id="b-normal">최고: 0점</div></div>
+<div class="d-card" onclick="play('hard')"><div class="d-icon">🔴</div><div class="d-title" style="color:#ef4444">어려움 모드</div><div class="d-desc">"이게 더 높다고?!" 5~35kcal 차이 극악 함정</div><div class="d-best" id="b-hard">최고: 0점</div></div>
+</div>
+</div>
+<div id="s-game" class="hidden">
+<div class="hud"><div>난이도<b id="h-diff">-</b></div><div>현재 점수<b id="h-score">0점</b></div><div>최고 기록<b id="h-best">0점</b></div></div>
+<div class="q-box">같은 <span>100g</span> 기준, 칼로리가 <span>더 높은</span> 급식은?</div>
+<div class="arena">
+<div class="f-card" id="c0" onclick="pick(0)"><div class="f-emo" id="e0"></div><div class="f-cat" id="k0"></div><div class="f-name" id="n0"></div><div class="f-desc" id="d0"></div><div class="cal-box hidden" id="r0"><div class="cal-100" id="v100-0"></div><div class="cal-50" id="v50-0"></div></div></div>
+<div class="vs">VS</div>
+<div class="f-card" id="c1" onclick="pick(1)"><div class="f-emo" id="e1"></div><div class="f-cat" id="k1"></div><div class="f-name" id="n1"></div><div class="f-desc" id="d1"></div><div class="cal-box hidden" id="r1"><div class="cal-100" id="v100-1"></div><div class="cal-50" id="v50-1"></div></div></div>
+</div>
+<div class="fb hidden" id="fb"><div class="fb-t" id="fb-t"></div><div class="fb-d" id="fb-d"></div><div id="fb-btn"></div></div>
+</div>
+<div id="s-over" class="hidden">
+<div class="over">
+<div style="font-size:48px">💀</div><h2>아쉽습니다! 탈락!</h2>
+<div style="font-size:46px;font-weight:bold;color:#38bdf8;margin:10px 0" id="f-score">0점</div>
+<div style="color:#facc15;font-weight:bold;margin-bottom:14px" id="f-tier"></div>
+<p style="color:#94a3b8;font-size:14px;margin-bottom:22px" id="f-sum"></p>
+<button class="btn btn-r" onclick="play(mode)">다시 도전</button>
+<button class="btn btn-h" onclick="home()">난이도 선택</button>
+</div>
+</div>
+</div>
+
+<script>
+var db=[
+{n:"마늘바게트빵",c:385,e:"🥖",k:"후식",d:"버터와 마늘소스가 스며든 바삭한 빵",f:"빵 탄수화물에 버터 지방이 스며들어 수분이 거의 없어 고기보다 100g당 열량이 훨씬 높습니다!"},
+{n:"생크림와플",c:340,e:"🧇",k:"디저트",d:"달콤한 생크림과 시럽이 올라간 와플",f:"생크림 유지방과 설탕, 밀가루가 결합해 부피 대비 열량 밀도가 최상위권입니다."},
+{n:"치즈고구마돈까스",c:310,e:"🍛",k:"튀김/육류",d:"튀김옷 속에 치즈와 고구마 무스 가득",f:"기름에 튀긴 돈까스에 치즈와 고구마 무스까지 더해져 메인 반찬 중 최고 수준입니다."},
+{n:"돼지수육",c:290,e:"🥩",k:"육류",d:"야들야들하게 삶아낸 삼겹·목살 수육",f:"삶아서 기름이 일부 빠졌어도 비계(지방) 비율이 높아 100g당 열량이 매우 높습니다."},
+{n:"탕수육 & 레몬소스",c:275,e:"🍖",k:"튀김/중식",d:"전분 튀김옷에 달콤새콤한 소스",f:"전분 튀김옷이 식용유를 흡수하고 설탕 소스가 더해져 열량이 높습니다."},
+{n:"치킨마요덮밥",c:245,e:"🍗",k:"일품식",d:"치킨 가라아게에 마요네즈와 데리야끼 소스",f:"튀긴 치킨에 고지방 소스인 마요네즈가 더해져 100g당 칼로리를 크게 높입니다."},
+{n:"함박스테이크",c:230,e:"🍔",k:"육류",d:"다진 고기와 데미글라스 소스 스테이크",f:"다진 고기 패티 속 지방과 진한 소스가 만나 200kcal를 훌쩍 넘깁니다."},
+{n:"오리불고기",c:210,e:"🦆",k:"육류",d:"매콤달콤한 양념에 볶아낸 오리고기",f:"오리고기는 불포화지방산이 풍부한 고단백·고지방 육류로 약 210kcal입니다."},
+{n:"들기름막국수",c:205,e:"🍜",k:"면류",d:"메밀면에 고소한 들기름과 김가루 비빔면",f:"반전! 국물이 없어 수분이 적고 순수 지방인 들기름이 코팅되어 크림파스타보다 높습니다!"},
+{n:"지코바식치밥",c:195,e:"🍚",k:"일품식",d:"숯불 바베큐 양념 치킨과 흰쌀밥",f:"튀기지 않은 숯불 치킨과 수분을 머금은 밥이 섞여 튀김류보다는 낮습니다."},
+{n:"눈꽃치즈떡볶이",c:190,e:"🌶️",k:"분식",d:"쫄깃한 쌀떡에 모짜렐라 치즈 토핑",f:"떡볶이 소스의 당분과 모짜렐라 치즈의 지방이 합쳐져 약 190kcal입니다."},
+{n:"버터장조림밥",c:185,e:"🧈",k:"일품식",d:"따뜻한 밥에 버터 한 조각과 장조림",f:"버터가 들어가지만 수분 많은 밥과 살코기 비중이 커서 생각보다 100g당 열량은 적당합니다."},
+{n:"로제크림파스타",c:175,e:"🍝",k:"면류",d:"토마토 소스와 생크림이 어우러진 파스타",f:"반전! 크림이 들어가도 삶은 면과 소스 자체에 수분 비중이 높아 175kcal 수준입니다."},
+{n:"감자채볶음",c:165,e:"🥔",k:"볶음반찬",d:"얇게 채 썬 감자를 식용유에 볶은 반찬",f:"충격 반전! 얇은 감자가 식용유를 스펀지처럼 흡수해 닭볶음탕이나 쌀밥보다 높습니다!"},
+{n:"찰현미밥",c:152,e:"🍚",k:"주식",d:"급식의 기본이 되는 잡곡밥",f:"쌀밥은 조리 시 물을 흡수해 무게의 절반 이상이 수분이라 100g당 152kcal입니다."},
+{n:"안동찜닭(닭볶음탕)",c:145,e:"🍲",k:"육류/조림",d:"닭고기와 채소, 당면을 양념에 졸인 요리",f:"반전! 닭살코기 비중이 높고 양념 국물과 채소의 수분이 많아 감자채볶음보다 낮습니다!"},
+{n:"마라탕",c:115,e:"🥘",k:"탕/찌개",d:"얼얼한 마라 육수에 채소·분모자·고기",f:"국물의 수분 비율이 압도적으로 높아 국물 포함 100g당 열량은 115kcal뿐입니다!"},
+{n:"순두부찌개",c:75,e:"🍲",k:"탕/찌개",d:"몽글몽글한 순두부와 해물 육수 찌개",f:"순두부 수분 함량이 85% 이상이고 국물까지 더해져 열량이 매우 낮습니다."},
+{n:"배추김치",c:30,e:"🥬",k:"김치류",d:"아삭하고 매콤한 급식 필수 반찬",f:"배추의 90% 이상이 수분과 식이섬유라 100g을 다 먹어도 30kcal뿐입니다."}
+];
+var mode='easy',sc=0,leftFood=null,rightFood=null,lock=false;
+function loadBest(){
+var ms=['easy','normal','hard'];
+for(var i=0;i<3;i++){
+var m=ms.at(i);
+document.getElementById('b-'+m).innerText='최고: '+(localStorage.getItem('dd_'+m)||0)+'점';
+}
+}
+function play(m){
+mode=m;sc=0;
+var nm={easy:'🟢 쉬움',normal:'🟡 보통',hard:'🔴 어려움'};
+document.getElementById('h-diff').innerText=nm[m];
+document.getElementById('h-score').innerText='0점';
+document.getElementById('h-best').innerText=(localStorage.getItem('dd_'+m)||0)+'점';
+document.getElementById('s-start').classList.add('hidden');
+document.getElementById('s-over').classList.add('hidden');
+document.getElementById('s-game').classList.remove('hidden');
+next();
+}
+function home(){
+loadBest();
+document.getElementById('s-game').classList.add('hidden');
+document.getElementById('s-over').classList.add('hidden');
+document.getElementById('s-start').classList.remove('hidden');
+}
+function next(){
+lock=false;
+var list=[];
+for(var i=0;i<db.length;i++){
+for(var j=i+1;j<db.length;j++){
+var a=db.at(i),b=db.at(j);
+var df=Math.abs(a.c-b.c);
+if((mode=='easy'&&df>=100)||(mode=='normal'&&df>=40&&df<100)||(mode=='hard'&&df>=5&&df<=35)){
+list.push({a:a,b:b});
+}
+}
+}
+var p=list.at(Math.floor(Math.random()*list.length));
+if(Math.random()>0.5){leftFood=p.a;rightFood=p.b;}else{leftFood=p.b;rightFood=p.a;}
+document.getElementById('fb').classList.add('hidden');
+var foods=[leftFood,rightFood];
+for(var k=0;k<2;k++){
+var f=foods.at(k);
+document.getElementById('c'+k).className='f-card';
+document.getElementById('e'+k).innerText=f.e;
+document.getElementById('k'+k).innerText=f.k;
+document.getElementById('n'+k).innerText=f.n;
+document.getElementById('d'+k).innerText=f.d;
+document.getElementById('r'+k).classList.add('hidden');
+}
+}
+function pick(idx){
+if(lock)return;
+lock=true;
+var ok=(idx==0)?(leftFood.c>rightFood.c):(rightFood.c>leftFood.c);
+var foods=[leftFood,rightFood];
+for(var k=0;k<2;k++){
+var f=foods.at(k);
+var other=foods.at(1-k);
+var el=document.getElementById('c'+k);
+el.classList.add('lock');
+el.classList.add(f.c>other.c?'win':'lose');
+document.getElementById('v100-'+k).innerText='100g당 '+f.c+' kcal';
+document.getElementById('v50-'+k).innerText='(50g당 '+(f.c/2)+' kcal)';
+document.getElementById('r'+k).classList.remove('hidden');
+}
+var hi=leftFood.c>rightFood.c?leftFood:rightFood;
+document.getElementById('fb').classList.remove('hidden');
+document.getElementById('fb-d').innerHTML='💡 <b>'+hi.n+'</b> 승리! ('+Math.abs(leftFood.c-rightFood.c)+'kcal 차이)<br>'+hi.f;
+if(ok){
+sc++;
+document.getElementById('h-score').innerText=sc+'점';
+var best=parseInt(localStorage.getItem('dd_'+mode)||0,10);
+if(sc>best){localStorage.setItem('dd_'+mode,sc);document.getElementById('h-best').innerText=sc+'점';}
+document.getElementById('fb-t').innerText='⭕ 정답! (+1점)';
+document.getElementById('fb-t').style.color='#10b981';
+document.getElementById('fb-btn').innerHTML='<button class="btn" onclick="next()">다음 라운드 ➔</button>';
+}else{
+document.getElementById('fb-t').innerText='❌ 오답! 즉시 탈락!';
+document.getElementById('fb-t').style.color='#ef4444';
+document.getElementById('fb-btn').innerHTML='<button class="btn btn-r" onclick="over()">결과 보기</button>';
+}
+}
+function over(){
+document.getElementById('s-game').classList.add('hidden');
+document.getElementById('s-over').classList.remove('hidden');
+document.getElementById('f-score').innerText=sc+'점';
+var t=sc>=15?'전설의 다대중 영양사 👑':sc>=10?'급식실 칼로리 스캐너 🔍':sc>=5?'급식 미식가 🍱':'다대중 급식 입문자 🥄';
+document.getElementById('f-tier').innerText=t;
+document.getElementById('f-sum').innerText='마지막 문제: ['+leftFood.n+' '+leftFood.c+'kcal] vs ['+rightFood.n+' '+rightFood.c+'kcal]';
+}
+loadBest();
+</script>
+</body>
+</html>
